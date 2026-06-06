@@ -5,7 +5,7 @@ const { makeLogger }   = require('../utils/logger');
 const log = makeLogger('Ready');
 
 module.exports = {
-    name: 'ready',
+    name: 'clientReady',
     once: true,
     async execute(client) {
         log.info(`Logged in as ${client.user.tag} (${client.user.id})`);
@@ -46,8 +46,15 @@ module.exports = {
 
         try {
             const rest = new REST({ version: '10' }).setToken(token);
-            await rest.put(Routes.applicationCommands(appId), { body: commands });
-            log.info(`Deployed ${commands.length} slash commands globally`);
+
+            // Fetch existing commands so we can preserve Entry Point commands
+            // (required by Discord when the app has Activities enabled)
+            const existing = await rest.get(Routes.applicationCommands(appId));
+            const entryPoints = existing.filter(c => c.type === 4);
+
+            const body = [...commands, ...entryPoints];
+            await rest.put(Routes.applicationCommands(appId), { body });
+            log.info(`Deployed ${commands.length} slash command(s) globally (+ ${entryPoints.length} entry point(s) preserved)`);
         } catch (err) {
             log.error('Command deployment failed:', err.message);
         }
