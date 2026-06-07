@@ -6,29 +6,37 @@ const { makeLogger } = require('../utils/logger');
 const log = makeLogger('EventHandler');
 
 function loadEvents(client) {
-    const evDir = path.join(__dirname, '..', 'events');
-    const files = fs.readdirSync(evDir).filter(f => f.endsWith('.js'));
-    let loaded = 0;
+    const evDir  = path.join(__dirname, '..', 'events');
+    let   loaded = 0;
 
-    for (const file of files) {
-        try {
-            const event = require(path.join(evDir, file));
-            if (!event?.name || !event?.execute) {
-                log.warn(`Skipping ${file} — missing name or execute`);
-                continue;
+    function walk(dir) {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                walk(full);
+            } else if (entry.name.endsWith('.js')) {
+                try {
+                    const event = require(full);
+                    if (!event?.name || !event?.execute) {
+                        log.warn(`Skipping ${entry.name} — missing name or execute`);
+                        continue;
+                    }
+                    if (event.once) {
+                        client.once(event.name, (...args) => event.execute(...args, client));
+                    } else {
+                        client.on(event.name, (...args) => event.execute(...args, client));
+                    }
+                    loaded++;
+                    log.debug(`Registered event: ${event.name}`);
+                } catch (err) {
+                    log.error(`Failed to load event ${entry.name}:`, err.message);
+                }
             }
-            if (event.once) {
-                client.once(event.name, (...args) => event.execute(...args, client));
-            } else {
-                client.on(event.name, (...args) => event.execute(...args, client));
-            }
-            loaded++;
-            log.debug(`Registered event: ${event.name}`);
-        } catch (err) {
-            log.error(`Failed to load event ${file}:`, err.message);
         }
     }
 
+    walk(evDir);
     log.info(`Registered ${loaded} events`);
 }
 

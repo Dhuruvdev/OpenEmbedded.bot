@@ -14,6 +14,7 @@ async function loadCommands(client) {
         for (const entry of entries) {
             const full = path.join(dir, entry.name);
             if (entry.isDirectory()) {
+                if (entry.name === 'owner') continue; // owner commands are message-based, not slash
                 walk(full);
             } else if (entry.name.endsWith('.js')) {
                 try {

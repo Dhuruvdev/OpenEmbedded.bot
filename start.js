@@ -398,6 +398,7 @@ async function deployCommands() {
         for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
             const full = path.join(dir, e.name);
             if (e.isDirectory()) {
+                if (e.name === 'owner') continue; // owner commands are message-based, not slash
                 walk(full);
             } else if (e.name.endsWith('.js')) {
                 try {
@@ -473,10 +474,11 @@ async function launchBot() {
         Partials,
     } = require('discord.js');
 
-    const { loadCommands } = require('./src/handlers/commandHandler');
-    const { loadEvents }   = require('./src/handlers/eventHandler');
-    const { initSchema }   = require('./src/database/schema');
-    const { makeLogger }   = require('./src/utils/logger');
+    const { loadCommands }      = require('./src/handlers/commandHandler');
+    const { loadEvents }        = require('./src/handlers/eventHandler');
+    const { loadOwnerCommands } = require('./src/handlers/ownerHandler');
+    const { initSchema }        = require('./src/database/schema');
+    const { makeLogger }        = require('./src/utils/logger');
 
     const botLog = makeLogger('Bot');
 
@@ -501,6 +503,9 @@ async function launchBot() {
 
     botLog.info('Loading commands…');
     await loadCommands(client);
+
+    botLog.info('Loading owner commands…');
+    loadOwnerCommands();
 
     botLog.info('Registering event handlers…');
     loadEvents(client);

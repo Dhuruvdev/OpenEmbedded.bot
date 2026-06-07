@@ -104,6 +104,13 @@ const AUTOMOD_SCAM_PATTERNS  = [
     /airdrop/gi,
 ];
 
+// Bot owner ID — set BOT_OWNER_ID in Replit Secrets / .env
+// Only this user can use owner-level no-prefix commands.
+const OWNER_ID = process.env.BOT_OWNER_ID ?? null;
+
+// Prefix for owner no-prefix message commands (e.g.  >>eval  >>guilds)
+const OWNER_PREFIX = '>>';
+
 module.exports = {
     COLORS,
     EMOJIS,
@@ -112,4 +119,6 @@ module.exports = {
     AUTOMOD_INVITE_PATTERN,
     AUTOMOD_LINK_PATTERN,
     AUTOMOD_SCAM_PATTERNS,
+    OWNER_ID,
+    OWNER_PREFIX,
 };

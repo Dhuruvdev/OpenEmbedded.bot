@@ -46,6 +46,10 @@ module.exports = {
             return interaction.editReply({ content: `${EMOJIS.ERROR} I don't have **Ban Members** permission.` });
         }
 
+        if (!targetUser) {
+            return interaction.editReply({ content: `${EMOJIS.ERROR} Could not resolve that user.` });
+        }
+
         try {
             await ModerationService.ban(interaction.guild, targetUser, interaction.user, reason, deleteDays);
 

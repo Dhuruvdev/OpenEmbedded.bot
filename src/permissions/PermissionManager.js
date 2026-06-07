@@ -76,7 +76,7 @@ class PermissionManager {
     static async assert(interaction, required = [], target = null, bot = null) {
         const memberCheck = this.check(interaction.member, required);
         if (!memberCheck.ok) {
-            await interaction.reply(this.deniedEmbed(memberCheck.reason));
+            await this._respond(interaction, this.deniedEmbed(memberCheck.reason));
             return false;
         }
 
@@ -84,12 +84,29 @@ class PermissionManager {
             const botMember = interaction.guild.members.me;
             const targetCheck = this.canActOn(interaction.member, target, botMember);
             if (!targetCheck.ok) {
-                await interaction.reply(this.deniedEmbed(targetCheck.reason));
+                await this._respond(interaction, this.deniedEmbed(targetCheck.reason));
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * Reply correctly regardless of whether the interaction has already been deferred.
+     * Deferred interactions must use editReply; others use reply.
+     */
+    static async _respond(interaction, payload) {
+        try {
+            if (interaction.deferred || interaction.replied) {
+                const { flags: _flags, ...rest } = payload;
+                await interaction.editReply(rest);
+            } else {
+                await interaction.reply(payload);
+            }
+        } catch (err) {
+            log.error('Failed to send permission-denied response:', err.message);
+        }
     }
 }
 

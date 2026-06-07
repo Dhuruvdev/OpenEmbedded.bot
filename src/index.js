@@ -3,9 +3,10 @@
 require('dotenv').config();
 
 const { Client, GatewayIntentBits, Collection, Partials } = require('discord.js');
-const { loadCommands } = require('./handlers/commandHandler');
-const { loadEvents }   = require('./handlers/eventHandler');
-const { initSchema }   = require('./database/schema');
+const { loadCommands }      = require('./handlers/commandHandler');
+const { loadEvents }        = require('./handlers/eventHandler');
+const { loadOwnerCommands } = require('./handlers/ownerHandler');
+const { initSchema }        = require('./database/schema');
 const { makeLogger }   = require('./utils/logger');
 
 const log = makeLogger('Core');
@@ -38,6 +39,9 @@ client.cooldowns = new Collection();
 
     log.info('Loading commands…');
     await loadCommands(client);
+
+    log.info('Loading owner commands…');
+    loadOwnerCommands();
 
     log.info('Loading events…');
     loadEvents(client);
